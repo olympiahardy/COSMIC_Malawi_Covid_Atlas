@@ -1,0 +1,1288 @@
+---
+title: "COVID_Analysis_Lung"
+output: html_document
+date: "2023-08-08"
+---
+
+```{r setup, include=FALSE}
+library(Seurat)
+library(tidyverse)
+library(harmony)
+library(SoupX)
+library(ggmin)
+```
+
+## Creating objects and metadata
+
+#Cos6plus1-ns
+```{r data}
+patient_6 <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/Co6plus1-ns/soup_clusters/cluster0_barcodes.tsv", header = F, row.names = "V1")
+patient_6$Sample <- "Cos-6"
+patient_1 <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/Co6plus1-ns/soup_clusters/cluster1_barcodes.tsv", header = F, row.names = "V1")
+patient_1$Sample <- "Cos-1"
+sample_meta <- rbind(patient_6, patient_1)
+cos6plus1 <- Read10X("/datastore3/Olympia/COSMIC_data/Results_Matrices/Co6plus1-ns/filtered_feature_bc_matrix/")
+```
+
+```{r SoupX}
+cos6plus1_raw <- Read10X("/datastore3/Olympia/COSMIC_data/Results_Matrices/Co6plus1-ns/raw_feature_bc_matrix/")
+clustering <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/Co6plus1-ns/clusters.csv", row.names = 1)
+clustering_vector <- unlist(as.vector(clustering))
+names(clustering_vector) <- rownames(clustering)
+sc = SoupChannel(cos6plus1_raw, cos6plus1)
+sc = setClusters(sc, clustering_vector)
+sc  <- autoEstCont(sc)
+adj.matrix  <- adjustCounts(sc, roundToInt = T)
+cos6plus1 <- as.matrix(adj.matrix)
+```
+
+
+```{r}
+cos6plus1 <- cos6plus1[,rownames(sample_meta)]
+cos6plus1.obj <- CreateSeuratObject(counts = cos6plus1,
+                              project = "Cos6plus1-ns")
+cos6plus1.obj$Sample <- sample_meta$Sample
+cos6plus1.obj.list <- SplitObject(cos6plus1.obj, split.by = "Sample")
+```
+
+
+```{r cos6, echo=FALSE}
+cos6 <- cos6plus1.obj.list[[1]]
+cos6
+cos6$Group <- "COVID-19"
+cos6$Diagnosis <- "COVID-19"
+cos6$AM_Covid <- "Positive"
+cos6$PM_Covid <- "Positive"
+cos6$Sex <- "Male"
+cos6$HIV_Status <- "Positive"
+cos6$Run <- cos6$orig.ident 
+saveRDS(cos6, "/datastore3/Olympia/COSMIC_data/Results_Matrices/Co6plus1-ns/cos6_1.rds")
+```
+
+```{r cos1, echo=FALSE}
+cos1 <- cos6plus1.obj.list[[2]]
+cos1
+cos1$Group <- "Pneumonia"
+cos1$Diagnosis <- "Pulmonary TB"
+cos1$AM_Covid <- "Negative"
+cos1$PM_Covid <- "Negative"
+cos1$Sex <- "Male"
+cos1$HIV_Status <- "Positive"
+cos1$Run <- cos1$orig.ident 
+saveRDS(cos1, "/datastore3/Olympia/COSMIC_data/Results_Matrices/Co6plus1-ns/cos1_1.rds")
+```
+
+#001R-003-004L-014R
+
+```{r}
+patient_1 <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/001R-003-004L-014R/soup_clusters/cluster0_barcodes.tsv", header = F, row.names = "V1")
+patient_14.1 <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/001R-003-004L-014R/soup_clusters/cluster1_barcodes.tsv", header = F, row.names = "V1")
+patient_14.2 <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/001R-003-004L-014R/soup_clusters/cluster2_barcodes.tsv", header = F, row.names = "V1")
+patient_14.3 <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/001R-003-004L-014R/soup_clusters/cluster3_barcodes.tsv", header = F, row.names = "V1")
+patient_1$Sample <- "Cos-1"
+patient_14.1$Sample <- "Cos-14"
+patient_14.2$Sample <- "Cos-14"
+patient_14.3$Sample <- "Cos-14"
+sample_meta <- rbind(patient_1, patient_14.1, patient_14.2, patient_14.3)
+l.001R_003_004L_014R <- Read10X("/datastore3/Olympia/COSMIC_data/Results_Matrices/001R-003-004L-014R/filtered_feature_bc_matrix/")
+```
+
+```{r SoupX}
+l.001R_003_004L_014R_raw <- Read10X("/datastore3/Olympia/COSMIC_data/Results_Matrices/001R-003-004L-014R/raw_feature_bc_matrix/")
+clustering <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/001R-003-004L-014R/clusters.csv", row.names = 1)
+clustering_vector <- unlist(as.vector(clustering))
+names(clustering_vector) <- rownames(clustering)
+sc = SoupChannel(l.001R_003_004L_014R_raw, l.001R_003_004L_014R)
+sc = setClusters(sc, clustering_vector)
+sc  <- autoEstCont(sc)
+adj.matrix  <- adjustCounts(sc, roundToInt = T)
+l.001R_003_004L_014R <- as.matrix(adj.matrix)
+```
+
+```{r}
+missing <- setdiff(rownames(sample_meta), colnames(l.001R_003_004L_014R))
+sample_meta <- subset(sample_meta, !(rownames(sample_meta) %in% missing))
+l.001R_003_004L_014R <- l.001R_003_004L_014R[,rownames(sample_meta)]
+```
+
+
+```{r}
+l.001R_003_004L_014R.obj <- CreateSeuratObject(counts = l.001R_003_004L_014R,
+                              project = "Cos-001R_003_004L_014R")
+l.001R_003_004L_014R.obj$Sample <- sample_meta$Sample
+l.001R_003_004L_014R.obj.list <- SplitObject(l.001R_003_004L_014R.obj, split.by = "Sample")
+```
+
+```{r}
+cos14 <- l.001R_003_004L_014R.obj.list[[2]]
+cos14$Group <- "Pneumonia"
+cos14$Diagnosis <- "Bacterial Pneumonia"
+cos14$AM_Covid <- "Negative"
+cos14$PM_Covid <- "Negative"
+cos14$Sex <- "Male"
+cos14$HIV_Status <- "Negative"
+cos14$Run <- cos14$orig.ident 
+saveRDS(cos14, "/datastore3/Olympia/COSMIC_data/Results_Matrices/001R-003-004L-014R/cos14_1.rds")
+```
+
+```{r}
+cos1 <- l.001R_003_004L_014R.obj.list[[1]]
+cos1$Group <- "Pneumonia"
+cos1$Diagnosis <- "Pulmonary TB"
+cos1$AM_Covid <- "Negative"
+cos1$PM_Covid <- "Negative"
+cos1$Sex <- "Male"
+cos1$HIV_Status <- "Positive"
+cos1$Run <- cos1$orig.ident 
+saveRDS(cos1, "/datastore3/Olympia/COSMIC_data/Results_Matrices/001R-003-004L-014R/cos1_2.rds")
+```
+
+#C2plus9plus10plus15
+
+```{r}
+patient_15.1 <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/C2plus9plus10plus15/soup_clusters/cluster0_barcodes.tsv", header = F, row.names = "V1")
+patient_15.2 <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/C2plus9plus10plus15/soup_clusters/cluster1_barcodes.tsv", header = F, row.names = "V1")
+patient_15.3 <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/C2plus9plus10plus15/soup_clusters/cluster2_barcodes.tsv", header = F, row.names = "V1")
+patient_15.4 <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/C2plus9plus10plus15/soup_clusters/cluster3_barcodes.tsv", header = F, row.names = "V1")
+patient_15.1$Sample <- "Cos-15"
+patient_15.2$Sample <- "Cos-15"
+patient_15.3$Sample <- "Cos-15"
+patient_15.4$Sample <- "Cos-15"
+sample_meta <- rbind(patient_15.1, patient_15.2, patient_15.3, patient_15.4)
+c2plus9plus10plus15 <- Read10X("/datastore3/Olympia/COSMIC_data/Results_Matrices/C2plus9plus10plus15/filtered_feature_bc_matrix/")
+```
+
+```{r SoupX}
+# c2plus9plus10plus15_raw <- Read10X("/datastore3/Olympia/COSMIC_data/Results_Matrices/C2plus9plus10plus15/raw_feature_bc_matrix/")
+# clustering <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/C2plus9plus10plus15/clusters.csv", row.names = 1)
+# clustering_vector <- unlist(as.vector(clustering))
+# names(clustering_vector) <- rownames(clustering)
+# sc = SoupChannel(c2plus9plus10plus15_raw, c2plus9plus10plus15)
+# sc = setClusters(sc, clustering_vector)
+# sc  <- autoEstCont(sc)
+# adj.matrix  <- adjustCounts(sc, roundToInt = T)
+# c2plus9plus10plus15 <- as.matrix(adj.matrix)
+```
+
+```{r}
+missing <- setdiff(rownames(sample_meta), colnames(c2plus9plus10plus15))
+length(missing)
+sample_meta <- subset(sample_meta, !(rownames(sample_meta) %in% missing))
+c2plus9plus10plus15 <- as.matrix(c2plus9plus10plus15)
+c2plus9plus10plus15 <- c2plus9plus10plus15[,rownames(sample_meta)]
+```
+
+
+```{r}
+c2plus9plus10plus15.obj <- CreateSeuratObject(counts = c2plus9plus10plus15,
+                              project = "Cos-C2plus9plus10plus15")
+c2plus9plus10plus15.obj$Sample <- sample_meta$Sample
+c2plus9plus10plus15.obj$Group <- "COVID-19"
+c2plus9plus10plus15.obj$Diagnosis <- "COVID-19"
+c2plus9plus10plus15.obj$AM_Covid <- "Positive"
+c2plus9plus10plus15.obj$PM_Covid <- "Positive"
+c2plus9plus10plus15.obj$Sex <- "Male"
+c2plus9plus10plus15.obj$HIV_Status <- "Negative"
+c2plus9plus10plus15.obj$Run <- c2plus9plus10plus15.obj$orig.ident
+saveRDS(c2plus9plus10plus15.obj, "/datastore3/Olympia/COSMIC_data/Results_Matrices/C2plus9plus10plus15/cos15_1.rds")
+```
+
+## 008R-006L-015L
+
+```{r}
+patient_6 <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/008R-006L-015L/soup_clusters/cluster0_barcodes.tsv", header = F, row.names = "V1")
+patient_15.1 <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/008R-006L-015L/soup_clusters/cluster1_barcodes.tsv", header = F, row.names = "V1")
+patient_15.2 <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/008R-006L-015L/soup_clusters/cluster2_barcodes.tsv", header = F, row.names = "V1")
+patient_6$Sample <- "Cos-6"
+patient_15.1$Sample <- "Cos-15"
+patient_15.2$Sample <- "Cos-15"
+sample_meta <- rbind(patient_6, patient_15.1, patient_15.2)
+l.008R_006L_015L <- Read10X("/datastore3/Olympia/COSMIC_data/Results_Matrices/008R-006L-015L/filtered_feature_bc_matrix/")
+```
+
+```{r SoupX}
+l.008R_006L_015L_raw <- Read10X("/datastore3/Olympia/COSMIC_data/Results_Matrices/008R-006L-015L/raw_feature_bc_matrix/")
+clustering <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/008R-006L-015L/clusters.csv", row.names = 1)
+clustering_vector <- unlist(as.vector(clustering))
+names(clustering_vector) <- rownames(clustering)
+sc = SoupChannel(l.008R_006L_015L_raw, l.008R_006L_015L)
+sc = setClusters(sc, clustering_vector)
+sc  <- autoEstCont(sc)
+adj.matrix  <- adjustCounts(sc, roundToInt = T)
+l.008R_006L_015L <- as.matrix(adj.matrix)
+```
+
+```{r}
+missing <- setdiff(rownames(sample_meta), colnames(l.008R_006L_015L))
+sample_meta <- subset(sample_meta, !(rownames(sample_meta) %in% missing))
+l.008R_006L_015L <- l.008R_006L_015L[,rownames(sample_meta)]
+```
+
+```{r}
+l.008R_006L_015L.obj <- CreateSeuratObject(counts = l.008R_006L_015L,
+                              project = "Cos-008R_006L_015L")
+l.008R_006L_015L.obj$Sample <- sample_meta$Sample
+l.008R_006L_015L.obj.list <- SplitObject(l.008R_006L_015L.obj, split.by = "Sample")
+```
+
+```{r}
+cos6 <- l.008R_006L_015L.obj.list[[1]]
+cos6$Group <- "COVID-19"
+cos6$Diagnosis <- "COVID-19"
+cos6$AM_Covid <- "Positive"
+cos6$PM_Covid <- "Positive"
+cos6$Sex <- "Male"
+cos6$HIV_Status <- "Positive"
+cos6$Run <- cos6$orig.ident
+saveRDS(cos6, "/datastore3/Olympia/COSMIC_data/Results_Matrices/008R-006L-015L/cos6_2.rds")
+```
+
+
+```{r}
+cos15 <- l.008R_006L_015L.obj.list[[2]]
+cos15$Group <- "COVID-19"
+cos15$Diagnosis <- "COVID-19"
+cos15$AM_Covid <- "Positive"
+cos15$PM_Covid <- "Positive"
+cos15$Sex <- "Male"
+cos15$HIV_Status <- "Negative"
+cos15$Run <- cos15$orig.ident
+saveRDS(cos15, "/datastore3/Olympia/COSMIC_data/Results_Matrices/008R-006L-015L/cos15_2.rds")
+```
+
+
+## C7plus11plus4
+
+```{r}
+patient_11.1 <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/C7plus11plus4/soup_clusters/cluster0_barcodes.tsv", header = F, row.names = "V1")
+patient_11.2 <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/C7plus11plus4/soup_clusters/cluster0_barcodes.tsv", header = F, row.names = "V1")
+patient_11.3 <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/C7plus11plus4/soup_clusters/cluster0_barcodes.tsv", header = F, row.names = "V1")
+patient_11.1$Sample <- "Cos-11"
+patient_11.2$Sample <- "Cos-11"
+patient_11.3$Sample <- "Cos-11"
+sample_meta <- rbind(patient_11.1, patient_11.2, patient_11.3)
+c7plus11plus4 <- Read10X("/datastore3/Olympia/COSMIC_data/Results_Matrices/C7plus11plus4/filtered_feature_bc_matrix/")
+```
+START AGAIN HERE
+```{r SoupX}
+c7plus11plus4_raw <- Read10X("/datastore3/Olympia/COSMIC_data/Results_Matrices/C7plus11plus4/raw_feature_bc_matrix/")
+clustering <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/C7plus11plus4/clusters.csv", row.names = 1)
+clustering_vector <- unlist(as.vector(clustering))
+names(clustering_vector) <- rownames(clustering)
+sc = SoupChannel(c7plus11plus4_raw, c7plus11plus4)
+sc = setClusters(sc, clustering_vector)
+sc  <- autoEstCont(sc)
+adj.matrix  <- adjustCounts(sc, roundToInt = T)
+c7plus11plus4 <- as.matrix(adj.matrix)
+```
+
+```{r}
+missing <- setdiff(rownames(sample_meta), colnames(c7plus11plus4))
+sample_meta <- subset(sample_meta, !(rownames(sample_meta) %in% missing))
+c7plus11plus4 <- c7plus11plus4[,rownames(sample_meta)]
+```
+
+
+```{r}
+c7plus11plus4.obj <- CreateSeuratObject(counts = c7plus11plus4,
+                              project = "Cos-C7plus11plus4")
+c7plus11plus4.obj$Sample <- sample_meta$Sample
+c7plus11plus4.obj$Group <- "Pneumonia"
+c7plus11plus4.obj$Diagnosis <- "Squamous cell carcinoma"
+c7plus11plus4.obj$AM_Covid <- "Negative"
+c7plus11plus4.obj$PM_Covid <- "Positive"
+c7plus11plus4.obj$Sex <- "Female"
+c7plus11plus4.obj$HIV_Status <- "Positive"
+c7plus11plus4.obj$Run <- c7plus11plus4.obj$orig.ident
+saveRDS(c7plus11plus4.obj, "/datastore3/Olympia/COSMIC_data/Results_Matrices/C7plus11plus4/cos11_1.rds")
+```
+
+## Cos16-L
+```{r}
+cos16 <- Read10X("/datastore3/Olympia/COSMIC_data/Results_Matrices/Cos16-L/filtered_feature_bc_matrix/")
+cos16_raw <- Read10X("/datastore3/Olympia/COSMIC_data/Results_Matrices/Cos16-L/raw_feature_bc_matrix/")
+clustering <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/Cos16-L/clusters.csv", row.names = 1)
+clustering_vector <- unlist(as.vector(clustering))
+names(clustering_vector) <- rownames(clustering)
+sc = SoupChannel(cos16_raw, cos16)
+sc = setClusters(sc, clustering_vector)
+sc  <- autoEstCont(sc)
+adj.matrix  <- adjustCounts(sc, roundToInt = T)
+cos16 <- as.matrix(adj.matrix)
+```
+
+```{r}
+cos16.obj <- CreateSeuratObject(counts = cos16,
+                              project = "Cos-16")
+```
+
+```{r}
+cos16.obj$Sample <- "Cos-16"
+cos16.obj$Group <- "Non-Pneumonia"
+cos16.obj$Diagnosis <- "Stroke"
+cos16.obj$AM_Covid <- "Negative"
+cos16.obj$PM_Covid <- "Negative"
+cos16.obj$Sex <- "Female"
+cos16.obj$HIV_Status <- "Negative"
+cos16.obj$Run <- "Cos-16"
+saveRDS(cos16.obj, "/datastore3/Olympia/COSMIC_data/Results_Matrices/Cos16-L/cos16_1.rds")
+```
+
+## Cos13-L
+```{r}
+cos13 <- Read10X("/datastore3/Olympia/COSMIC_data/Results_Matrices/cos13-L/filtered_feature_bc_matrix/")
+cos13_raw <- Read10X("/datastore3/Olympia/COSMIC_data/Results_Matrices/cos13-L/raw_feature_bc_matrix/")
+clustering <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/cos13-L/clusters.csv", row.names = 1)
+clustering_vector <- unlist(as.vector(clustering))
+names(clustering_vector) <- rownames(clustering)
+sc = SoupChannel(cos13_raw, cos13)
+sc = setClusters(sc, clustering_vector)
+sc  <- autoEstCont(sc)
+adj.matrix  <- adjustCounts(sc, roundToInt = T)
+cos13 <- as.matrix(adj.matrix)
+```
+
+
+```{r}
+cos13.obj <- CreateSeuratObject(counts = cos13,
+                              project = "Cos-13")
+```
+
+```{r}
+cos13.obj$Sample <- "Cos-13"
+cos13.obj$Group <- "COVID-19"
+cos13.obj$Diagnosis <- "COVID-19"
+cos13.obj$AM_Covid <- "Positive"
+cos13.obj$PM_Covid <- "Positive"
+cos13.obj$Sex <- "Female"
+cos13.obj$HIV_Status <- "Negative"
+cos13.obj$Run <- "Cos-13"
+saveRDS(cos13.obj, "/datastore3/Olympia/COSMIC_data/Results_Matrices/cos13-L/cos13_1.rds")
+```
+
+## Cos12-L
+```{r}
+cos12 <- Read10X("/datastore3/Olympia/COSMIC_data/Results_Matrices/Cos12-L/filtered_feature_bc_matrix/")
+cos12_raw <- Read10X("/datastore3/Olympia/COSMIC_data/Results_Matrices/Cos12-L/raw_feature_bc_matrix/")
+clustering <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/Cos12-L/clusters.csv", row.names = 1)
+clustering_vector <- unlist(as.vector(clustering))
+names(clustering_vector) <- rownames(clustering)
+sc = SoupChannel(cos12_raw, cos12)
+sc = setClusters(sc, clustering_vector)
+sc  <- autoEstCont(sc)
+adj.matrix  <- adjustCounts(sc, roundToInt = T)
+cos12 <- as.matrix(adj.matrix)
+```
+
+
+```{r}
+cos12.obj <- CreateSeuratObject(counts = cos12,
+                              project = "Cos-12")
+```
+
+```{r}
+cos12.obj$Sample <- "Cos-12"
+cos12.obj$Group <- "COVID-19"
+cos12.obj$Diagnosis <- "Sepsis"
+cos12.obj$AM_Covid <- "Positive"
+cos12.obj$PM_Covid <- "Positive"
+cos12.obj$Sex <- "Female"
+cos12.obj$HIV_Status <- "Negative"
+cos12.obj$Run <- "Cos-12"
+saveRDS(cos12.obj, "/datastore3/Olympia/COSMIC_data/Results_Matrices/Cos12-L/Cos12_1.rds")
+```
+
+
+## Cos14-L
+```{r}
+cos14 <- Read10X("/datastore3/Olympia/COSMIC_data/Results_Matrices/Cos14-L/filtered_feature_bc_matrix/")
+cos14_raw <- Read10X("/datastore3/Olympia/COSMIC_data/Results_Matrices/Cos14-L/raw_feature_bc_matrix/")
+clustering <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/Cos14-L/clusters.csv", row.names = 1)
+clustering_vector <- unlist(as.vector(clustering))
+names(clustering_vector) <- rownames(clustering)
+sc = SoupChannel(cos14_raw, cos14)
+sc = setClusters(sc, clustering_vector)
+sc  <- autoEstCont(sc)
+adj.matrix  <- adjustCounts(sc, roundToInt = T)
+cos14 <- as.matrix(adj.matrix)
+```
+
+
+```{r}
+cos14.obj <- CreateSeuratObject(counts = cos14,
+                              project = "Cos-14")
+```
+
+```{r}
+cos14.obj$Sample <- "Cos-14"
+cos14.obj$Group <- "Pneumonia"
+cos14.obj$Diagnosis <- "Bacterial Pneumonia"
+cos14.obj$AM_Covid <- "Negative"
+cos14.obj$PM_Covid <- "Negative"
+cos14.obj$Sex <- "Male"
+cos14.obj$HIV_Status <- "Negative"
+cos14.obj$Run <- "Cos-14"
+saveRDS(cos14.obj, "/datastore3/Olympia/COSMIC_data/Results_Matrices/Cos14-L/Cos14_2.rds")
+```
+
+
+## Cos11-L
+```{r}
+cos11 <- Read10X("/datastore3/Olympia/COSMIC_data/Results_Matrices/Cos11-L/filtered_feature_bc_matrix/")
+cos11_raw <- Read10X("/datastore3/Olympia/COSMIC_data/Results_Matrices/Cos11-L/raw_feature_bc_matrix/")
+clustering <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/Cos11-L/clusters.csv", row.names = 1)
+clustering_vector <- unlist(as.vector(clustering))
+names(clustering_vector) <- rownames(clustering)
+sc = SoupChannel(cos11_raw, cos11)
+sc = setClusters(sc, clustering_vector)
+sc  <- autoEstCont(sc)
+adj.matrix  <- adjustCounts(sc, roundToInt = T)
+cos11 <- as.matrix(adj.matrix)
+```
+
+
+```{r}
+cos11.obj <- CreateSeuratObject(counts = cos11,
+                              project = "Cos-11")
+```
+
+```{r}
+cos11.obj$Sample <- "Cos-11"
+cos11.obj$Group <- "Pneumonia"
+cos11.obj$Diagnosis <- "Squamous cell carcinoma"
+cos11.obj$AM_Covid <- "Negative"
+cos11.obj$PM_Covid <- "Positive"
+cos11.obj$Sex <- "Female"
+cos11.obj$HIV_Status <- "Positive"
+cos11.obj$Run <- "Cos-11"
+saveRDS(cos11.obj, "/datastore3/Olympia/COSMIC_data/Results_Matrices/Cos11-L/Cos11_1.rds")
+```
+
+## Co6-Lu
+```{r}
+cos6 <- Read10X("/datastore3/Olympia/COSMIC_data/Results_Matrices/Co6-Lu/filtered_feature_bc_matrix/")
+cos6_raw <- Read10X("/datastore3/Olympia/COSMIC_data/Results_Matrices/Co6-Lu/raw_feature_bc_matrix/")
+clustering <- read.csv("/datastore3/Olympia/COSMIC_data/Results_Matrices/Co6-Lu/clusters.csv", row.names = 1)
+clustering_vector <- unlist(as.vector(clustering))
+names(clustering_vector) <- rownames(clustering)
+sc = SoupChannel(cos6_raw, cos6)
+sc = setClusters(sc, clustering_vector)
+sc  <- autoEstCont(sc)
+adj.matrix  <- adjustCounts(sc, roundToInt = T)
+cos6 <- as.matrix(adj.matrix)
+```
+
+
+```{r}
+cos6.obj <- CreateSeuratObject(counts = cos6,
+                              project = "Co6-Lu")
+```
+
+```{r}
+cos6.obj$Sample <- "Cos-6"
+cos6.obj$Group <- "COVID-19"
+cos6.obj$Diagnosis <- "COVID-19"
+cos6.obj$AM_Covid <- "Positive"
+cos6.obj$PM_Covid <- "Positive"
+cos6.obj$Sex <- "Male"
+cos6.obj$HIV_Status <- "Positive"
+cos6.obj$Run <- cos6.obj$orig.ident
+saveRDS(cos6.obj, "/datastore3/Olympia/COSMIC_data/Results_Matrices/Co6-Lu/Cos6_3.rds")
+```
+
+
+### QC
+
+# Function
+```{r}
+Mark.cells <- function(Seurat.object, nFeature.low = 250, nFeature.high = 5000, mt.high = 25, nCount.high = 18000) {
+  #Mark low QC cells instead of remove them
+  
+  poscells.high.mt <- WhichCells(Seurat.object, expression = percent.mt > mt.high)
+  Seurat.object$high.mt<- ifelse(colnames(Seurat.object) %in% poscells.high.mt, "Pos", "Neg")
+  print("high mt cells:")
+  print(table(Seurat.object$high.mt))
+  
+  poscells.high.ft <- WhichCells(Seurat.object, expression = nFeature_RNA > nFeature.high)
+  Seurat.object$high.nFeature <- ifelse(colnames(Seurat.object) %in% poscells.high.ft, "Pos", "Neg")
+  print("high nFeature cells:")
+  print(table(Seurat.object$high.nFeature))
+  
+  poscells.low.ft <- WhichCells(Seurat.object, expression = nFeature_RNA < nFeature.low)
+  Seurat.object$low.nFeature <- ifelse(colnames(Seurat.object) %in% poscells.low.ft, "Pos", "Neg")
+  print("low nFeature cells:")
+  print(table(Seurat.object$low.nFeature))
+  
+  poscells.high.nc <- WhichCells(Seurat.object, expression = nCount_RNA > nCount.high)
+  Seurat.object$high.nCount <- ifelse(colnames(Seurat.object) %in% poscells.high.nc, "Pos", "Neg")
+  print("high UMIs:")
+  print(table(Seurat.object$high.nCount))
+  
+  return(Seurat.object)
+}
+```
+
+# Load data
+```{r}
+cos1.1 <- readRDS("/datastore3/Olympia/COSMIC_data/Results_Matrices/Co6plus1-ns/cos1_1.rds")
+cos6.1 <- readRDS("/datastore3/Olympia/COSMIC_data/Results_Matrices/Co6plus1-ns/cos6_1.rds")
+cos1.2 <- readRDS("/datastore3/Olympia/COSMIC_data/Results_Matrices/001R-003-004L-014R/cos1_2.rds")
+cos14.1 <- readRDS("/datastore3/Olympia/COSMIC_data/Results_Matrices/001R-003-004L-014R/cos14_1.rds")
+cos15.1 <- readRDS("/datastore3/Olympia/COSMIC_data/Results_Matrices/C2plus9plus10plus15/cos15_1.rds")
+cos6.2 <- readRDS("/datastore3/Olympia/COSMIC_data/Results_Matrices/008R-006L-015L/cos6_2.rds")
+cos15.2 <- readRDS("/datastore3/Olympia/COSMIC_data/Results_Matrices/008R-006L-015L/cos15_2.rds")
+cos11.1 <- readRDS("/datastore3/Olympia/COSMIC_data/Results_Matrices/C7plus11plus4/cos11_1.rds")
+cos16.1 <- readRDS("/datastore3/Olympia/COSMIC_data/Results_Matrices/Cos16-L/cos16_1.rds")
+cos13.1 <- readRDS("/datastore3/Olympia/COSMIC_data/Results_Matrices/cos13-L/cos13_1.rds")
+cos12.1 <- readRDS("/datastore3/Olympia/COSMIC_data/Results_Matrices/Cos12-L/Cos12_1.rds")
+cos14.2 <- readRDS("/datastore3/Olympia/COSMIC_data/Results_Matrices/Cos14-L/Cos14_2.rds")
+cos11.2 <- readRDS("/datastore3/Olympia/COSMIC_data/Results_Matrices/Cos11-L/Cos11_1.rds")
+cos6.3 <- readRDS("/datastore3/Olympia/COSMIC_data/Results_Matrices/Co6-Lu/Cos6_3.rds")
+```
+
+```{r}
+cos1.1[["percent.mt"]] <- PercentageFeatureSet(cos1.1, pattern = "^MT-")
+cos6.1[["percent.mt"]] <- PercentageFeatureSet(cos6.1, pattern = "^MT-")
+cos1.2[["percent.mt"]] <- PercentageFeatureSet(cos1.2, pattern = "^MT-")
+cos14.1[["percent.mt"]] <- PercentageFeatureSet(cos14.1, pattern = "^MT-")
+cos15.1[["percent.mt"]] <- PercentageFeatureSet(cos15.1, pattern = "^MT-")
+cos6.2[["percent.mt"]] <- PercentageFeatureSet(cos6.2, pattern = "^MT-")
+cos15.2[["percent.mt"]] <- PercentageFeatureSet(cos15.2, pattern = "^MT-")
+cos11.1[["percent.mt"]] <- PercentageFeatureSet(cos11.1, pattern = "^MT-")
+cos16.1[["percent.mt"]] <- PercentageFeatureSet(cos16.1, pattern = "^MT-")
+cos13.1[["percent.mt"]] <- PercentageFeatureSet(cos13.1, pattern = "^MT-")
+cos12.1[["percent.mt"]] <- PercentageFeatureSet(cos12.1, pattern = "^MT-")
+cos14.2[["percent.mt"]] <- PercentageFeatureSet(cos14.2, pattern = "^MT-")
+cos11.2[["percent.mt"]] <- PercentageFeatureSet(cos11.2, pattern = "^MT-")
+cos6.3[["percent.mt"]] <- PercentageFeatureSet(cos6.3, pattern = "^MT-")
+```
+
+```{r}
+cos1.1$Sequencing <- "snRNA"
+cos1.1 <- subset(cos1.1, subset = nFeature_RNA > 150 & nFeature_RNA < 5000 & percent.mt < 15)
+
+cos6.1$Sequencing <- "snRNA"
+cos6.1 <- subset(cos6.1, subset = nFeature_RNA > 150 & nFeature_RNA < 5000 & percent.mt < 15)
+
+cos1.2$Sequencing <- "snRNA"
+cos1.2 <- subset(cos1.2, subset = nFeature_RNA > 150 & nFeature_RNA < 5000 & percent.mt < 10)
+
+cos14.1$Sequencing <- "snRNA"
+cos14.1 <- subset(cos14.1, subset = nFeature_RNA > 150 & nFeature_RNA < 5000 & percent.mt < 10)
+
+cos15.1$Sequencing <- "snRNA"
+cos15.1 <- subset(cos15.1, subset = nFeature_RNA > 150 & nFeature_RNA < 5000 & percent.mt < 5)
+
+cos6.2$Sequencing <- "snRNA"
+cos6.2 <- subset(cos6.2, subset = nFeature_RNA > 150 & nFeature_RNA < 5000 & percent.mt < 10)
+
+cos15.2$Sequencing <- "snRNA"
+cos15.2 <- subset(cos15.2, subset = nFeature_RNA > 150 & nFeature_RNA < 8000 & percent.mt < 10)
+
+cos11.1$Sequencing <- "snRNA"
+cos11.1 <- subset(cos11.1, subset = nFeature_RNA > 150 & nFeature_RNA < 3000 & percent.mt < 5)
+
+cos16.1$Sequencing <- "scRNA"
+cos16.1 <- subset(cos16.1, subset = nFeature_RNA > 150 & nFeature_RNA < 8000 & percent.mt < 10)
+
+cos13.1$Sequencing <- "scRNA"
+cos13.1 <- subset(cos13.1, subset = nFeature_RNA > 150 & nFeature_RNA < 4000 & percent.mt < 10)
+
+cos12.1$Sequencing <- "scRNA"
+cos12.1 <- subset(cos12.1, subset = nFeature_RNA > 150 & nFeature_RNA < 6000 & percent.mt < 15)
+
+cos14.2$Sequencing <- "scRNA"
+cos14.2 <- subset(cos14.2, subset = nFeature_RNA > 150 & nFeature_RNA < 6000 & percent.mt < 15)
+
+cos11.2$Sequencing <- "scRNA"
+cos11.2 <- subset(cos11.2, subset = nFeature_RNA > 150 & nFeature_RNA < 8000 & percent.mt < 15)
+
+cos6.3$Sequencing <- "scRNA"
+cos6.3 <- subset(cos6.3, subset = nFeature_RNA > 150 & nFeature_RNA < 4000 & percent.mt < 10)
+```
+
+```{r}
+object.list <- c(cos1.1,
+                 cos6.1,
+                 cos1.2,
+                 cos14.1,
+                 cos15.1,
+                 cos6.2,
+                 cos15.2,
+                 cos11.1,
+                 cos16.1,
+                 cos12.1,
+                 cos13.1,
+                 cos14.2,
+                 cos11.2,
+                 cos6.3)
+```
+
+```{r}
+object.list <- lapply(object.list, function(object) {
+  object[["percent.ribo"]] <- PercentageFeatureSet(object, pattern = "^RP[SL]")
+  object
+})
+object.list <- lapply(object.list, function(object) {
+  object[["percent.hb"]] <- PercentageFeatureSet(object, pattern = "^HB[^(P)]")
+  object
+})
+```
+
+
+
+```{r}
+merged_samples <- merge(x = object.list[[1]],
+                       y = object.list[2:length(object.list)],
+                       merge.data = TRUE)
+```
+
+
+```{r}
+s.genes <- cc.genes$s.genes
+g2m.genes <- cc.genes$g2m.genes
+merged_samples <- CellCycleScoring(merged_samples, s.features = s.genes, g2m.features = g2m.genes)
+```
+
+```{r}
+merged_samples <- merged_samples %>%
+    NormalizeData() %>% 
+    CellCycleScoring(s.features = s.genes, g2m.features = g2m.genes) %>% 
+    ScaleData(vars.to.regress = c("percent.mt", "percent.ribo", "percent.hb", "S.Score", "G2M.Score"))
+```
+
+```{r}
+merged_samples <- SCTransform(merged_samples, vars.to.regress = c("percent.mt", "percent.ribo", "percent.hb", "S.Score", "G2M.Score"))
+```
+
+```{r}
+merged_samples$Sequencing[merged_samples$Run == "Co6-Lu"] <- 'scRNA_Frozen'
+merged_samples$Sequencing[merged_samples$Sequencing == "scRNA"] <- 'scRNA_Fresh'
+```
+
+
+```{r}
+DefaultAssay(merged_samples) <- "RNA"
+snRNA <- subset(merged_samples, subset = Sequencing == "snRNA")
+snRNA <- SCTransform(snRNA, vars.to.regress = c("percent.mt", "percent.ribo", "percent.hb", "S.Score", "G2M.Score"), variable.features.n = 4000)
+sn_variable_feats <- snRNA@assays$SCT@var.features
+```
+
+```{r}
+co6lu <- subset(merged_samples, subset = Sequencing == "scRNA_Frozen")
+co6lu <- SCTransform(co6lu, vars.to.regress = c("percent.mt", "percent.ribo", "percent.hb", "S.Score", "G2M.Score"))
+co6lu_variable_feats <- co6lu@assays$SCT@var.features
+```
+
+```{r}
+scRNA <- subset(merged_samples, subset = Sequencing == "scRNA_Fresh")
+scRNA <- SCTransform(scRNA, vars.to.regress = c("percent.mt", "percent.ribo", "percent.hb", "S.Score", "G2M.Score"))
+scRNA_variable_feats <- scRNA@assays$SCT@var.features
+```
+
+```{r}
+shared_var_feats <- intersect(intersect(sn_variable_feats,scRNA_variable_feats),co6lu_variable_feats)
+```
+
+```{r}
+merged_samples@assays$SCT@var.features <- shared_var_feats
+VariableFeatures(merged_samples) <- shared_var_feats
+```
+
+
+
+```{r}
+DefaultAssay(merged_samples) <- "SCT"
+merged_samples <- merged_samples %>% 
+    RunPCA(npcs = 40)
+```
+
+
+```{r}
+integrated_cosmic_shared_vars <- RunHarmony(merged_samples, 
+                                group.by.vars = c("Sample", "Sequencing"), 
+                                reduction = "pca", assay.use = "SCT", reduction.save = "harmony")
+```
+
+```{r}
+ElbowPlot(integrated_cosmic_shared_vars, ndims = 40)
+```
+
+```{r}
+integrated_cosmic_shared_vars <- RunUMAP(integrated_cosmic_shared_vars, reduction = "harmony", dims = 1:32)
+integrated_cosmic_shared_vars <- FindNeighbors(integrated_cosmic_shared_vars, reduction = "harmony", dims = 1:32, verbose=FALSE)
+integrated_cosmic_shared_vars <- FindClusters(integrated_cosmic_shared_vars, verbose = FALSE, res=0.2)
+```
+
+```{r}
+integrated_cosmic_shared_vars$Preparation <- NA
+integrated_cosmic_shared_vars$Preparation[integrated_cosmic_shared_vars$Sequencing == "snRNA"] <- "Nuclei"
+integrated_cosmic_shared_vars$Preparation[integrated_cosmic_shared_vars$Sequencing == "scRNA"] <- "Fresh"
+integrated_cosmic_shared_vars$Preparation[integrated_cosmic_shared_vars$Run == "Co6-Lu"] <- "Frozen"
+```
+
+```{r}
+DimPlot(object = integrated_cosmic_shared_vars, reduction = "umap") + theme_powerpoint()
+DimPlot(object = integrated_cosmic_shared_vars, reduction = "umap", group.by="Sample") + theme_powerpoint()
+DimPlot(object = integrated_cosmic_shared_vars, reduction = "umap", group.by="Sequencing") + theme_powerpoint()
+DimPlot(object = integrated_cosmic_shared_vars, reduction = "umap", group.by="Group") + theme_powerpoint()
+DimPlot(object = integrated_cosmic_shared_vars, reduction = "umap", group.by="orig.ident") + theme_powerpoint()
+```
+
+```{r}
+DimPlot(object = integrated_cosmic_shared_vars_sct, reduction = "umap") + theme_powerpoint()
+DimPlot(object = integrated_cosmic_shared_vars_sct, reduction = "umap", group.by="Sample") + theme_powerpoint()
+DimPlot(object = integrated_cosmic_shared_vars_sct, reduction = "umap", group.by="Sequencing") + theme_powerpoint()
+DimPlot(object = integrated_cosmic_shared_vars_sct, reduction = "umap", group.by="Group") + theme_powerpoint()
+DimPlot(object = integrated_cosmic_shared_vars_sct, reduction = "umap", group.by="orig.ident") + theme_powerpoint()
+```
+```{r}
+DimPlot(object = integrated_cosmic_shared_vars, reduction = "umap", split.by="Sample") + theme_powerpoint()
+DimPlot(object = integrated_cosmic_shared_vars, reduction = "umap", split.by="Sequencing") + theme_powerpoint()
+DimPlot(object = integrated_cosmic_shared_vars, reduction = "umap", split.by="Group") + theme_powerpoint()
+DimPlot(object = integrated_cosmic_shared_vars, reduction = "umap", split.by="orig.ident") + theme_powerpoint()
+```
+
+```{r}
+FeaturePlot(integrated_cosmic_shared_vars, features = "CD45")
+```
+
+
+```{r}
+DimPlot(object = integrated_cosmic_shared_vars_sct, reduction = "umap", split.by="Sample") + theme_powerpoint()
+DimPlot(object = integrated_cosmic_shared_vars_sct, reduction = "umap", split.by="Sequencing") + theme_powerpoint()
+DimPlot(object = integrated_cosmic_shared_vars_sct, reduction = "umap", split.by="Group") + theme_powerpoint()
+DimPlot(object = integrated_cosmic_shared_vars_sct, reduction = "umap", split.by="orig.ident") + theme_powerpoint()
+```
+
+
+```{r}
+saveRDS(integrated_cosmic_shared_vars, file = "/datastore/Olympia/lung_integrated_shared_SCT_250823.rds")
+saveRDS(integrated_cosmic_shared_vars_sct, file = "/datastore/Olympia/lung_integrated_SCT_250823.rds")
+```
+
+```{r}
+DefaultAssay(integrated_cosmic_shared_vars) <- "RNA"
+integrated_cosmic_shared_vars.markers <- FindAllMarkers(integrated_cosmic_shared_vars, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25, test.use = "MAST")
+top.integrated_cosmic_shared_vars.markers <- integrated_cosmic_shared_vars.markers %>%
+    group_by(cluster) %>%
+    slice_max(n = 10, order_by = avg_log2FC)
+```
+
+
+```{r}
+DimPlot(integrated_cosmic_shared_vars)
+```
+
+```{r}
+sweep.res.list <- paramSweep_v3(integrated_cosmic_shared_vars, PCs = 1:30, sct = TRUE)
+```
+
+```{r}
+sweep.stats_lung <- summarizeSweep(sweep.res.list, GT = FALSE) #Summarises the bimodality co-efficients calculated for each pN and pK pair in the previous line. 
+bcmvn_lung <- find.pK(sweep.stats_lung) #Will calculate and visualise BCmvn values
+
+pK=as.numeric(as.character(bcmvn_lung$pK))
+BCmetric=bcmvn_lung$BCmetric
+pK_choose = pK[which(BCmetric %in% max(BCmetric))]
+
+par(mar=c(5,4,4,8)+1,cex.main=1.2,font.main=2)
+plot(x = pK, y = BCmetric, pch = 16,type="b",
+     col = "blue",lty=1)
+abline(v=pK_choose,lwd=2,col='red',lty=2)
+title("The BCmvn distributions")
+text(pK_choose,max(BCmetric),as.character(pK_choose),pos = 4,col = "red")
+```
+
+
+```{r}
+pK <- 0.04
+
+annotations <- integrated_cosmic_shared_vars@meta.data$seurat_clusters  #Get information about clusters. This will be used to calculate adjustment for homotypic doublets. 
+
+homotypic.prop <- modelHomotypic(annotations)  #Models population of homotypic doublets assuming frequency of provided cluster annotations reflects proportion of homotypic doublets          
+
+nExp_poi <- round(0.016*nrow(integrated_cosmic_shared_vars@meta.data))  ## This example assuming 1.6% doublet formation rate - Here you should input your expected number of doublets. This will be suggested from the manufacturers protocols
+
+nExp_poi.adj <- round(nExp_poi*(1-homotypic.prop)) #Adjust your expected number of doublets for the fact that DoubletFinder cannot recognise homotypic doublets
+
+#Here we run the doublet finder pipeline
+integrated_cosmic_shared_vars <- doubletFinder_v3(integrated_cosmic_shared_vars, 
+                         PCs = 1:30, #Here should have the same number of PCs as your initial pre-processing step
+                         pN = 0.25,  #This is the percentage of artificial doublets introduced to the dataset. This has been shown to have minimal impact on results. 25% is default. 
+                         pK = pK,    #This is the value which we calculated to reflect optimal neighbourhood size for doublet detection.
+                         nExp = nExp_poi.adj, #This is adjusted value based on homotypic doublets. If you want to be more certain to remove all heterotypic doublets, you can use non-adjusted output. 
+                         reuse.pANN = FALSE, 
+                         sct = TRUE)
+```
+
+```{r}
+VlnPlot(integrated_cosmic_shared_vars_sct, features = c("SFTA2", "CEACAM6", "FXYD3", "CAV1", "TSPAN13", "KRT7", "ADIRF", "HOPX", "AGER", "EMP2"), pt.size = 0)
+```
+
+
+```{r}
+DoHeatmap(object = integrated_cosmic_shared_vars, features = top30.integrated_cosmic_shared_vars.markers$gene)
+```
+
+
+```{r}
+top30.integrated_cosmic_shared_vars.markers <- integrated_cosmic_shared_vars.markers %>%
+    group_by(cluster) %>%
+    slice_max(n = 30, order_by = avg_log2FC)
+```
+
+```{r}
+saveRDS(integrated_cosmic_shared_vars, file = "/datastore/Olympia/lung_atlas_180823.rds")
+```
+
+```{r}
+write.csv(integrated_cosmic_shared_vars.markers, file = "/datastore/Olympia/lung_atlas_180823_markers.csv")
+```
+
+```{r}
+wierd.markers.2 <- FindMarkers(integrated_cosmic_shared_vars, ident.1 = 19, ident.2 = 3, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25, test.use = "MAST")
+```
+
+```{r}
+markers0 <- integrated_cosmic_shared_vars.markers %>%
+    group_by(cluster) %>%
+    slice_max(n = 50, order_by = avg_log2FC)
+
+```
+
+```{r}
+VlnPlot(integrated_cosmic_shared_vars, features = c("COL6A2", "SFRP2", "IGFBP7", "IGFBP6", "COL3A1", "C1S", "MMP2", "MGP", "SPARC", "COL1A2"), pt.size = 0)
+```
+
+
+
+```{r}
+VlnPlot(integrated_cosmic_shared_vars, features = c("LUM", "COL6A1", "CYR61", "C1R", "COL1A2", "MFAP4", "A2M", "C1S", "ADH1B", "GPX3"), pt.size = 0)
+```
+```{r}
+VlnPlot(integrated_cosmic_shared_vars, features = c("NAPSA", "SFTPD", "PEBP4", "SLC39A8", "SLC34A2", "CYB5A", "MUC1", "S100A14", "SFTA2", "SFTA3"), pt.size = 0)
+```
+
+```{r}
+DimPlot(integrated_cosmic_shared_vars, label = T)
+```
+NEXN, ACTG2, LMOD1, IGFBP7, PPP1R14A, DES, FLNA, TPM2, PLN, SELM
+```{r}
+VlnPlot(integrated_cosmic_shared_vars, features = c("CNN1", "MYH11"), pt.size = 0)
+```
+
+```{r}
+new.cluster.ids <- c("AT1", "T-cells", "Macrophages", "Fibroblasts", "Neutrophils",
+                     "Endothelial cells", "AT2", "AT2", "Smooth muscle",
+                     "Cilliated cells", "Myofibroblast", "Secretory", "Plasma cells", "B-cells",
+                     "Neutrophils", "Lymphatic", "Mesothelium", "Neuroendocrine", "Mast cells", 
+                     "Fibroblasts", "Erythrocytes")
+
+names(new.cluster.ids) <- levels(integrated_cosmic_shared_vars)
+integrated_cosmic_shared_vars <- RenameIdents(integrated_cosmic_shared_vars, new.cluster.ids)
+integrated_cosmic_shared_vars$celltypes <- Idents(integrated_cosmic_shared_vars)
+```
+
+```{r}
+DimPlot(integrated_cosmic_shared_vars, label = T)
+```
+
+```{r}
+## Heatmap
+matrix <- GetAssayData(integrated_cosmic_shared_vars, slot="data")
+subset.matrix <- matrix[top.integrated_cosmic_shared_vars.markers$gene, ]
+data <- as.matrix(subset.matrix)
+
+#Reposition the breaks at the quantiles of the data, then each color will represent an equal proportion of the data:
+mat_breaks <- seq(min(data), max(data), length.out = 10)
+quantile_breaks <- function(xs, n = 10) {
+  breaks <- quantile(xs, probs = seq(0, 1, length.out = n))
+  breaks[!duplicated(breaks)]
+}
+mat_breaks <- quantile_breaks(data, n = 11)
+
+
+annotation_col <- integrated_cosmic_shared_vars@meta.data[,c("celltypes","Group")]
+colnames(annotation_col) <- c("Cluster","Group")
+#annotation_col <- arrange(annotation_col, match(annotation_col$Cluster, levels(annotation_col$Cluster)))
+annotation_col$Cluster <- as.ordered(factor(annotation_col$Cluster, levels = c("AT1", "T-cells", "Macrophages", "Fibroblasts", "Neutrophils",
+                     "Endothelial cells", "AT2", "Smooth muscle",
+                     "Cilliated cells", "Myofibroblast", "Secretory", "Plasma cells", "B-cells",
+                    "Lymphatic", "Mesothelium", "Neuroendocrine", "Mast cells", 
+                      "Erythrocytes")))
+# annotation_col <- arrange(annotation_col, Cluster)
+cluster_colors <- c("#FB8072", "#DE77AE", "#FCCDE5", "#8DD3C7", "#FDB462", "#CCEBC5", "#B3DE69", "#35978F", "#FFD92F", "#BEBADA", "#DFC27D", "#BC80BD", "#C3211B", "#747936", "#076DF3","#FDFD80","#950CAD","#11DAAB")
+names(cluster_colors) <- levels(annotation_col$Cluster)
+annotation_col$Group <- as.ordered(factor(annotation_col$Group, levels = c("COVID-19", "Pneumonia", "Non-Pneumonia")))
+group_colors<- c("#F1CDB1", "#8FA9DF","#CBDFB8")
+names(group_colors) <- levels(annotation_col$Group)
+metacols <- list(
+  Cluster = cluster_colors,
+  Group = group_colors)
+
+
+#Order cells by cluster
+data <- data[,order(annotation_col$Cluster, annotation_col$Group)]
+
+#Scale data
+scale_rows <- function(x) t(scale(t(x)))
+data <- scale_rows(data) # Z-score
+data[data > 2] <- 2
+data[data < -2] <- -2
+
+#Generate heatmap
+png(filename =  'heatmap_lung_plot.png', width = 10, height = 6,units = 'in', res = 300)
+heatmap <- pheatmap(
+  mat = data,
+  border_color = NA,
+  color = colorRampPalette(c("#EB5AF7","#0B0801","#FFF957"))(8),
+  show_rownames = FALSE,
+  show_colnames = FALSE,
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  annotation_col = annotation_col,
+  annotation_colors = metacols,
+  fontsize = 10,
+  fontsize_row = 10,
+  scale = "none", 
+  gaps_col=head(as.numeric(cumsum(table(annotation_col$Cluster))), -1)
+)
+dev.off()
+```
+
+```{r}
+integrated_cosmic_shared_vars <- readRDS("/datastore/Olympia/lung_atlas_180823.rds")
+```
+
+
+```{r}
+lung_cleaned <- subset(integrated_cosmic_shared_vars, DF.classifications_0.25_0.04_1367 == "Singlet")
+```
+
+```{r}
+lung_cleaned <- RunUMAP(lung_cleaned, reduction = "harmony", assay = "RNA", dims = 1:30)
+lung_cleaned <- FindNeighbors(lung_cleaned, reduction = "harmony", dims = 1:30, verbose=FALSE)
+lung_cleaned <- FindClusters(lung_cleaned, verbose = FALSE, res=0.5)
+```
+
+```{r}
+DimPlot(object = lung_cleaned, reduction = "umap", label = T, group.by = "celltypes") + theme_powerpoint()
+DimPlot(object = lung_cleaned, reduction = "umap", label = T) + theme_powerpoint()
+```
+```{r}
+DimPlot(object = lung_cleaned, reduction = "umap", label = T, group.by = "Sequencing") + theme_powerpoint()
+```
+
+
+```{r}
+lung_tcells <- subset(lung_cleaned, idents = "T-cells")
+```
+
+```{r}
+lung_tcells <- lung_tcells %>%
+  NormalizeData() %>%
+  FindVariableFeatures(selection.method = "vst", nfeatures = 2000) %>% 
+  ScaleData(vars.to.regress = c("percent.mt", "percent.ribo", "percent.hb", "S.Score", "G2M.Score")) 
+lung_tcells <- RunPCA(lung_tcells, npcs = 40)
+lung_tcells <- RunHarmony(lung_tcells, 
+                         group.by.vars = c("Sample", "Sequencing"), 
+                         reduction = "pca", assay.use = "RNA", reduction.save = "harmony")
+ElbowPlot(lung_tcells, ndims = 40)
+```
+
+```{r}
+lung_tcells <- RunUMAP(lung_tcells, reduction = "harmony", assay = "RNA", dims = 1:18)
+lung_tcells <- FindNeighbors(lung_tcells, reduction = "harmony", dims = 1:18, verbose=FALSE)
+lung_tcells <- FindClusters(lung_tcells, verbose = FALSE, res=0.1)
+```
+
+
+```{r}
+p1 <- DimPlot(object = lung_tcells, reduction = "umap", label = T, group.by = "celltypes") + theme_powerpoint()
+p2 <- DimPlot(object = lung_tcells, reduction = "umap", label = T) + theme_powerpoint()
+p1 + p2
+```
+
+```{r}
+DefaultAssay(lung_tcells) <- "RNA"
+lung_tcells.markers <- FindAllMarkers(lung_tcells, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25, test.use = "MAST")
+top.lung_tcells.markers <- lung_tcells.markers %>%
+  group_by(cluster) %>%
+  slice_max(n = 10, order_by = avg_log2FC)
+```
+
+
+```{r}
+FeaturePlot(lung_tcells, features = c("CD8A", "CD4", "CD3D", "CD3E"), pt.size = 0.1)
+```
+
+```{r}
+VlnPlot(lung_tcells, features = c("CD8A", "CD4", "CD3D", "CD3E"), pt.size = 0.1)
+```
+```{r}
+ DimPlot(object = lung_tcells, reduction = "umap", label = T, split.by = "Group") + theme_powerpoint()
+```
+
+```{r}
+lung_tcells_fine <- subset(lung_tcells, idents = c(1,2,5))
+```
+
+```{r}
+lung_tcells_fine <- lung_tcells_fine %>%
+  NormalizeData() %>%
+  FindVariableFeatures(selection.method = "vst", nfeatures = 2000) %>% 
+  ScaleData(vars.to.regress = c("percent.mt", "percent.ribo", "percent.hb", "S.Score", "G2M.Score")) 
+lung_tcells_fine <- RunPCA(lung_tcells_fine, npcs = 40)
+lung_tcells_fine <- RunHarmony(lung_tcells_fine, 
+                         group.by.vars = c("Sample", "Sequencing"), 
+                         reduction = "pca", assay.use = "RNA", reduction.save = "harmony")
+ElbowPlot(lung_tcells_fine, ndims = 40)
+```
+
+
+
+```{r}
+lung_tcells_fine <- RunUMAP(lung_tcells_fine, reduction = "harmony", assay = "RNA", dims = 1:18)
+lung_tcells_fine <- FindNeighbors(lung_tcells_fine, reduction = "harmony", dims = 1:18, verbose=FALSE)
+lung_tcells_fine <- FindClusters(lung_tcells_fine, verbose = FALSE, res=0.1)
+```
+
+```{r}
+p1 <- DimPlot(object = lung_tcells_fine, reduction = "umap", label = T, group.by = "celltypes") + theme_powerpoint()
+p2 <- DimPlot(object = lung_tcells_fine, reduction = "umap", label = T) + theme_powerpoint()
+p1 + p2
+```
+```{r}
+DefaultAssay(lung_tcells_fine) <- "RNA"
+lung_tcells.fine.markers <- FindAllMarkers(lung_tcells_fine, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25, test.use = "MAST")
+top.lung_tcells.fine.markers <- lung_tcells.fine.markers %>%
+  group_by(cluster) %>%
+  slice_max(n = 10, order_by = avg_log2FC)
+```
+
+```{r}
+FeaturePlot(lung_tcells_fine, features = c("CD8A", "CD2", "CD3D", "CD96", "IL7R", "ITK", "PTPRC", "CD3E", 'MALAT1', "PDCD4", "GPR171"), pt.size = 0.1)
+```
+
+lung_cleaned
+```{r}
+#contaminant <- subset(lung_immune, idents = c(16,17))
+#contaminant_barcodes <- colnames(contaminant)
+lung_cleaned <- subset(lung_cleaned, cells = contaminant_barcodes, invert = T)
+```
+
+```{r}
+lung_immune <- subset(lung_immune, idents = c(16,17), invert = T)
+```
+
+```{r}
+immune_cluster_ids <- c("AT2", "Macrophages", "Neutrophils", "CD4+ T-cells", "CD8+ T-cells", "Neutrophils", "Macrophages", "Macrophages", "Macrophages", "Plasma cells", "B-cells", "Neutrophils", "Macrophages", "Neutrophils", "Macrophages", "DC")
+names(immune_cluster_ids) <- levels(lung_immune)
+lung_immune <- RenameIdents(lung_immune, immune_cluster_ids)
+```
+
+```{r}
+x <- as.data.frame(lung_cleaned$celltypes)
+rownames(x) <- rownames(lung_cleaned@meta.data)
+x <- rownames_to_column(x, var = "cellbarcodes")
+```
+
+
+```{r}
+lung_immune$annotation <- Idents(lung_immune)
+y <- as.data.frame(lung_immune$annotation)
+rownames(y) <- rownames(lung_immune@meta.data)
+y <- rownames_to_column(y, var = "cellbarcodes")
+```
+
+```{r}
+cd8.cells <- subset(x = lung_tcells_fine, subset = CD8A > 2)
+```
+
+```{r}
+cd8.cells.use <- colnames(cd8.cells)
+lung_tcells <- SetIdent(lung_tcells, cells = cd8.cells.use, value = 'CD8+ T-cells')
+```
+
+```{r}
+cd4.cells <- subset(x = lung_tcells_fine, subset = CD8A > 2, invert = T)
+```
+
+```{r}
+cd4.cells.use <- colnames(cd4.cells)
+lung_tcells <- SetIdent(lung_tcells, cells = cd4.cells.use, value = 'CD4+ T-cells')
+```
+
+```{r}
+at2.cells.use <- WhichCells(lung_tcells, idents = '0')
+lung_tcells <- SetIdent(lung_tcells, cells = at2.cells.use, value = 'AT2')
+```
+
+```{r}
+nk.cells.use <- WhichCells(lung_tcells, idents = '3')
+lung_tcells <- SetIdent(lung_tcells, cells = nk.cells.use, value = 'NK cells')
+```
+
+```{r}
+neut.cells.use <- WhichCells(lung_tcells, idents = '4')
+lung_tcells <- SetIdent(lung_tcells, cells = neut.cells.use, value = 'Neutrophils')
+```
+
+```{r}
+lung_tcells$annotation <- lung_tcells@active.ident
+```
+
+```{r}
+x <- as.data.frame(lung_cleaned$celltypes)
+rownames(x) <- rownames(lung_cleaned@meta.data)
+x <- rownames_to_column(x, var = "cellbarcodes")
+```
+
+
+```{r}
+y <- as.data.frame(lung_tcells$annotation)
+rownames(y) <- rownames(lung_tcells@meta.data)
+y <- rownames_to_column(y, var = "cellbarcodes")
+```
+
+
+```{r}
+tcells_final.cells.use <- WhichCells(lung_cleaned, idents = 'T-cells')
+lung_cleaned <- SetIdent(lung_cleaned, cells = tcells_final.cells.use, value = lung_tcells$annotation)
+```
+
+
+```{r}
+lung_cleaned$celltypefine <- lung_cleaned@active.ident
+```
+
+```{r}
+DimPlot(lung_cleaned, group.by = "celltypefine")
+```
+
+```{r}
+Idents(lung_cleaned) <- lung_cleaned$celltypes
+lung_immune <- subset(lung_cleaned, idents = c("Neutrophils", "T-cells", "Macrophages", "Plasma cells", "B-cells"))
+```
+
+```{r}
+lung_immune <- lung_immune %>%
+  NormalizeData() %>%
+  FindVariableFeatures(selection.method = "vst", nfeatures = 2000) %>% 
+  ScaleData(vars.to.regress = c("percent.mt", "percent.ribo", "percent.hb", "S.Score", "G2M.Score")) 
+lung_immune <- RunPCA(lung_immune, npcs = 40)
+lung_immune <- RunHarmony(lung_immune, 
+                         group.by.vars = c("Sample", "Sequencing"), 
+                         reduction = "pca", assay.use = "RNA", reduction.save = "harmony")
+ElbowPlot(lung_immune, ndims = 40)
+```
+
+
+
+```{r}
+lung_immune <- RunUMAP(lung_immune, reduction = "harmony", assay = "RNA", dims = 1:28)
+lung_immune <- FindNeighbors(lung_immune, reduction = "harmony", dims = 1:28, verbose=FALSE)
+lung_immune <- FindClusters(lung_immune, verbose = FALSE, res=0.5)
+```
+
+
+```{r}
+DimPlot(lung_immune, group.by = "celltypes")
+DimPlot(lung_immune, label = T)
+DimPlot(lung_immune, split.by = "Group")
+```
+
+```{r}
+VlnPlot(lung_immune, features = c("CD8A","CORO1A", "KLRB1", "CD3E", "LTB", "CXCR4", "IL7R", "TRAC", "IL32", "CD2", "CD3D"))
+```
+
+
+```{r}
+DefaultAssay(lung_immune) <- "RNA"
+lung_immune.markers <- FindAllMarkers(lung_immune, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25, test.use = "MAST")
+top.lung_immune.markers <- lung_immune.markers %>%
+  group_by(cluster) %>%
+  slice_max(n = 20, order_by = avg_log2FC)
+```
+
+```{r}
+
+```
+
+
+```{r}
+Idents(lung_cleaned) <- lung_cleaned$annotation_final
+freq.table.group <- as.data.frame(prop.table(x = table(Idents(lung_cleaned), lung_cleaned$Group), margin = 2))
+ggplot(data=freq.table.group, aes(x=freq.table.group$Var2, y = freq.table.group$Freq, fill=freq.table.group$Var1)) + geom_bar(stat="identity", color="black") +
+labs(x="Group", y="Proportion of cells", fill="Cell Type") + scale_x_discrete(limits = rev(levels(freq.table.group$Var2)))
+```
+
+
+
+
+
+```{r}
+lung_cleaned$cell.type.group <- paste(Idents(lung_cleaned), lung_cleaned$Group, sep ="_")
+new.cluster.ids <- unique(Idents(lung_cleaned))
+num_cluster <- length(new.cluster.ids)
+covid.deg <- list()
+pneumonia.deg <- list()
+for (x in 1:num_cluster) {
+  n=new.cluster.ids[x]
+  check_sanity = F
+  Idents(lung_cleaned) <- lung_cleaned$cell.type.group
+  covid.response <- FindMarkers(lung_cleaned, ident.1 = paste(n,"_COVID-19", sep =""), ident.2 = paste(n,"_Pneumonia", sep=""), min.pct = 0.25, test.use = "MAST")
+  covid.response$gene <- rownames(covid.response)
+covid.deg[[n]] <- covid.response[covid.response$p_val_adj<0.05 & covid.response$avg_log2FC > 0.5 ,]
+pneumonia.deg[[n]] <- covid.response[covid.response$p_val_adj<0.05 & covid.response$avg_log2FC < -0.5 ,]
+}
+```
+
+```{r}
+lung_cleaned$celltype_annotation <- as.character(lung_cleaned$annotation_final)
+saveRDS(lung_cleaned, file = "/datastore/Olympia/COSMIC_lung_atlas_220823.rds")
+```
+
+```{r}
+### Refining T cell ####
+lung_tcells <- subset(lung.atlas, idents = c("CD8+ T cells", "Naive CD4+ T cells", "NK cells",
+                                             "Th1", "T reg"))
+
+
+lung_tcells <- SCTransform(lung_tcells, vars.to.regress = c("percent.mt", "percent.ribo", "percent.hb", "S.Score", "G2M.Score"),
+                           variable.features.n = 2000)
+
+lung_tcells <- lung_tcells %>% 
+  RunPCA(npcs = 40, assay = "SCT")
+lung_tcells <- RunHarmony(lung_tcells, 
+                          group.by.vars = c("Sample", "Sequencing"), 
+                          reduction = "pca", assay.use = "SCT", reduction.save = "harmony")
+ElbowPlot(lung_tcells, ndims = 40)
+
+lung_tcells <- RunUMAP(lung_tcells, reduction = "harmony", dims = 1:32)
+lung_tcells <- FindNeighbors(lung_tcells, reduction = "harmony", dims = 1:32, verbose=FALSE)
+lung_tcells <- FindClusters(lung_tcells, verbose = FALSE, res=0.5)
+
+DimPlot(object = lung_tcells, reduction = "umap", label = T) + theme_powerpoint()
+DimPlot(object = lung_tcells, reduction = "umap", group.by="Sample") + theme_powerpoint()
+DimPlot(object = lung_tcells, reduction = "umap", group.by="Sequencing") + theme_powerpoint()
+DimPlot(object = lung_tcells, reduction = "umap", group.by="Group") + theme_powerpoint()
+DimPlot(object = lung_tcells, reduction = "umap", group.by="orig.ident") + theme_powerpoint()
+
+VlnPlot(lung_tcells, features = c("TRDC", "TRGC1", "TRGC2", "TRGV9", "TRDV2", "KLRD1", "IL7R", "KLRC1", "DUSP2", "GNLY", "KLRG1", "CD7", "CD4", "CD8A", "CD8B", "CD3D", "CD3E"))
+DefaultAssay(lung_tcells) <- "SCT"
+lung_tcells.markers <- FindAllMarkers(lung_tcells, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25, assay = "SCT")
+top.lung_tcells.markers <- lung_tcells.markers %>%
+  group_by(cluster) %>%
+  slice_max(n = 40, order_by = avg_log2FC)
+
+gdtcell <- subset(lung_tcells, ident = 8)
+gdtcell.barcodes <- rownames(gdtcell@meta.data)
+lung.atlas@meta.data[gdtcell.barcodes, "celltype_annotation"] <- "gdT cells"
+
+lung.immune@meta.data[gdtcell.barcodes, "celltype.final"] <- "gdT cells"
+
+DimPlot(lung.immune, group.by = "celltype.final")
+```
+
