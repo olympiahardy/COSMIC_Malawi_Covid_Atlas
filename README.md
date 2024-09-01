@@ -1,5 +1,7 @@
 # Covid Study using Minimally invasive autopsy for Interrogation of Cellular response (COSMIC) in Malawi to generate a spatially resolved single cell Covid atlas
-Codebase for a spatially resolved single-cell atlas of the lung in fatal Covid19 in an African population that reveals a distinct cellular signature and an interferon gamma dominated response.
+Codebase for the single-cell analysis of a spatially resolved single-cell atlas of the lung in fatal Covid19 in an African population that reveals a distinct cellular signature and an interferon gamma dominated response.
+
+This repository is for the **single-cell transcriptomic analysis only**. The analysis repository for the imaging mass cytometry data can be found here: https://github.com/joaolsf/Spatial_Single_Cell_Lung_Atlas_Malawi_COVID
 
 James Nyirenda*, Olympia Hardy*, João Da Silva Filho*, Vanessa Herder, Charalampos Attipa, Charles Ndovi, Memory Siwombo, Takondwa Namalima, Leticia Suwedi, Watipenge Nyasulu, Thokozile Ngulube, Deborah Nyirenda, Leonard Mvaya, Joseph Phiri, Dennis Chasweka, Chisomo Eneya, Chikondi Makwinja, Chisomo Phiri, Frank Ziwoya, Abel Tembo, Kingsley Makwangwala, Stanley Khoswe, Peter Banda, Ben Morton, Orla Hilton, Sarah Lawrence, Monique Freire dos Reis, Gisely Cardoso Melo, Marcus Vinicius Guimaraes de Lacerda, Fabio Trindade Maranhão Costa, Wuelton Marcelo Monteiro, Luiz Carlos de Lima Ferreira, Carla Johnson, Dagmara McGuinness, Kondwani Jambo, Michael Haley, Benjamin Kumwenda, Massimo Palmarini, Kayla G. Barnes+, Donna M. Denno+, Wieger Voskuijl+ , Steve Kamiza+, Kevin Couper+, Matthias Marti+, Thomas Otto+, Christopher A. Moxon+,**
 
@@ -22,7 +24,6 @@ Check out our interactive single cell atlases hosted on the cellxgeneVIP platfor
 # Code Layout
   * Analysis
       * scRNA - Scripts containing all pre-processing steps to generate single cell RNA sequencing objects for each tissue
-      * IMC - Scripts containing all pre-processing steps to generate the imaging mass cytometry object for the lung
   * Figures
       * Scripts containing all steps to regenerate figures from the study
    
